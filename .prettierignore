@@ -1,0 +1,7 @@
+node_modules
+.next
+mockup-legacy
+supabase/.branches
+supabase/.temp
+*.lock
+pnpm-lock.yaml
