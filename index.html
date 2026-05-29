@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es" class="">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="description" content="Portal Vecinal Dr. Domagk 2 · Gestión moderna de tu comunidad" />
+  <title>Dr. Domagk 2 · Portal Vecinal</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="logo.svg" />
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50:  '#f0f7fc',
+              100: '#dceaf5',
+              200: '#b9d6eb',
+              300: '#87b9d9',
+              400: '#4f95c2',
+              500: '#2e78a9',
+              600: '#1d639b',
+              700: '#195283',
+              800: '#173f63',
+              900: '#163651',
+              950: '#0e2238',
+            },
+          },
+          animation: {
+            'fade-in': 'fadeIn 240ms ease-out',
+          },
+        },
+      },
+    };
+  </script>
+
+  <!-- Custom styles -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body class="font-sans bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen antialiased">
+
+  <!-- Sidebar overlay (mobile) -->
+  <div id="sidebar-overlay" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden" onclick="toggleSidebar()" aria-hidden="true"></div>
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="fixed top-0 left-0 bottom-0 w-64 bg-slate-900 text-slate-100 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-200 flex flex-col">
+    <!-- Logo & finca -->
+    <div class="px-5 py-5 border-b border-slate-800 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-white p-1.5 flex items-center justify-center flex-shrink-0 shadow-sm ring-1 ring-black/5">
+        <img src="logo.svg" alt="Dr. Domagk 2" class="w-full h-full" />
+      </div>
+      <div class="min-w-0 flex-1">
+        <p class="font-semibold text-base text-white tracking-tight leading-tight">Dr. Domagk 2</p>
+        <p class="text-[11px] text-slate-400 truncate mt-0.5">Portal Vecinal</p>
+      </div>
+      <button onclick="toggleSidebar()" class="lg:hidden text-slate-400 hover:text-white" aria-label="Cerrar menú">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <!-- Nav -->
+    <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto" id="sidebar-nav" aria-label="Navegación principal">
+      <!-- Inyectado por app.js -->
+    </nav>
+
+    <!-- Finca info -->
+    <div class="mx-3 mb-3 p-3 rounded-lg bg-slate-800/50 border border-slate-800">
+      <p class="text-[11px] text-slate-500 uppercase tracking-wide font-medium mb-1.5">Comunidad</p>
+      <p class="text-xs font-semibold text-white mb-0.5">Comunidad Dr. Domagk 2</p>
+      <p class="text-[11px] text-slate-400 leading-snug">Calle Doctor Domagk 2, 28036 Madrid</p>
+      <div class="mt-2.5 pt-2.5 border-t border-slate-800 flex items-center gap-3 text-[11px] text-slate-400">
+        <span class="flex items-center gap-1"><i data-lucide="building-2" class="w-3 h-3"></i>6 plantas</span>
+        <span class="flex items-center gap-1"><i data-lucide="home" class="w-3 h-3"></i>24 viviendas</span>
+      </div>
+    </div>
+
+    <!-- User -->
+    <div class="px-3 pb-4 pt-2 border-t border-slate-800">
+      <button class="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800/50 transition-colors text-left">
+        <div class="avatar w-9 h-9 rounded-full text-xs" style="--avatar-from:#1d639b;--avatar-to:#2e78a9">MF</div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-medium text-white truncate">Miguel Fortes</p>
+          <p id="sidebar-user-role" class="text-[11px] text-slate-400 truncate">Administrador · Dr. Domagk 2</p>
+        </div>
+        <i data-lucide="chevron-up" class="w-4 h-4 text-slate-400 flex-shrink-0"></i>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main area -->
+  <div class="lg:pl-64 min-h-screen flex flex-col">
+
+    <!-- Topbar -->
+    <header class="sticky top-0 z-30 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+      <div class="h-16 px-4 lg:px-8 flex items-center gap-3 lg:gap-4">
+
+        <button onclick="toggleSidebar()" class="lg:hidden p-2 -ml-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="Abrir menú">
+          <i data-lucide="menu" class="w-5 h-5"></i>
+        </button>
+
+        <!-- Mobile brand chip -->
+        <div class="lg:hidden flex items-center gap-2">
+          <div class="w-7 h-7 rounded-lg bg-brand-50 dark:bg-white p-1 flex items-center justify-center shadow-sm ring-1 ring-black/5">
+            <img src="logo.svg" alt="Dr. Domagk 2" class="w-full h-full" />
+          </div>
+          <h1 id="topbar-title" class="text-base font-semibold text-slate-900 dark:text-slate-100">Dashboard</h1>
+        </div>
+
+        <!-- Search -->
+        <div class="hidden md:flex flex-1 max-w-md relative">
+          <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+          <input
+            type="search"
+            placeholder="Buscar incidencias, vecinos, documentos..."
+            class="w-full h-9 pl-9 pr-12 bg-slate-100/60 dark:bg-slate-800/50 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 focus:bg-white dark:focus:bg-slate-900 focus:border-brand-400 dark:focus:border-brand-500 rounded-lg text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-colors"
+          />
+          <kbd class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-medium text-slate-400 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 px-1.5 py-0.5 rounded">⌘ K</kbd>
+        </div>
+
+        <div class="flex-1 md:hidden"></div>
+
+        <!-- Role selector -->
+        <div class="relative" id="rol-selector-wrap">
+          <button onclick="event.stopPropagation(); toggleRolDropdown()" id="rol-selector-btn" class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-sm" aria-haspopup="true" aria-expanded="false">
+            <span id="rol-dot" class="w-2 h-2 rounded-full bg-brand-500"></span>
+            <span id="rol-label" class="font-medium text-slate-700 dark:text-slate-200 hidden sm:inline">Administrador</span>
+            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
+          </button>
+          <div id="rol-dropdown" class="hidden absolute right-0 mt-2 w-72 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden z-40">
+            <div class="px-4 py-2.5 border-b border-slate-100 dark:border-slate-800">
+              <p class="text-[10px] uppercase tracking-wider font-semibold text-slate-500 dark:text-slate-400">Ver demo como</p>
+            </div>
+            <div id="rol-options" class="py-1.5"></div>
+            <div class="px-4 py-2.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">Cambia el rol para ver cómo cambia la app según los permisos.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dark mode toggle -->
+        <button onclick="toggleDarkMode()" class="p-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" aria-label="Cambiar modo claro/oscuro">
+          <i data-lucide="sun" id="dark-icon-sun" class="w-5 h-5 hidden"></i>
+          <i data-lucide="moon" id="dark-icon-moon" class="w-5 h-5"></i>
+        </button>
+
+        <!-- Notifications -->
+        <button onclick="navigateTo('notificaciones')" class="relative p-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" aria-label="Ver notificaciones y comunicados">
+          <i data-lucide="megaphone" class="w-5 h-5"></i>
+          <span id="notif-badge" class="hidden absolute top-1 right-1 min-w-[16px] h-4 px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">0</span>
+        </button>
+
+        <!-- Divider -->
+        <span class="hidden lg:block w-px h-6 bg-slate-200 dark:bg-slate-700"></span>
+
+        <!-- User chip -->
+        <button class="hidden lg:flex items-center gap-2.5 pl-1 pr-2 py-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+          <div class="avatar w-7 h-7 rounded-full text-[11px]" style="--avatar-from:#1d639b;--avatar-to:#2e78a9">MF</div>
+          <span class="text-sm font-medium text-slate-700 dark:text-slate-200">Miguel</span>
+          <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- View container -->
+    <main id="view-container" class="flex-1 view-active" role="main">
+      <!-- Inyectado por app.js -->
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-200 dark:border-slate-800 px-6 lg:px-10 py-5 text-xs text-slate-500 dark:text-slate-500 flex items-center justify-between flex-wrap gap-3">
+      <span class="flex items-center gap-2">
+        <span class="w-4 h-4 inline-flex"><img src="logo.svg" alt="" class="w-full h-full opacity-70" aria-hidden="true" /></span>
+        <span>© 2026 Portal Vecinal Dr. Domagk 2 · Powered by <strong class="font-medium text-slate-600 dark:text-slate-400">Shire</strong></span>
+      </span>
+      <span class="flex items-center gap-4">
+        <a href="#" class="hover:text-slate-700 dark:hover:text-slate-300">Privacidad</a>
+        <a href="#" class="hover:text-slate-700 dark:hover:text-slate-300">Términos</a>
+        <a href="#" class="hover:text-slate-700 dark:hover:text-slate-300">Ayuda</a>
+      </span>
+    </footer>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 modal-backdrop bg-black/50">
+    <div id="modal-panel" class="modal-panel w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+      <div data-modal-body></div>
+    </div>
+  </div>
+
+  <!-- Lucide icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <!-- App -->
+  <script src="app.js"></script>
+</body>
+</html>
