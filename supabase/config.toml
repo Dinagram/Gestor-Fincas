@@ -18,6 +18,9 @@ major_version = 15
 [db.pooler]
 enabled = false
 
+[db.seed]
+enabled = true
+
 [realtime]
 enabled = true
 

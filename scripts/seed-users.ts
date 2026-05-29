@@ -57,18 +57,26 @@ const USERS: SeedUser[] = [
   { id: 'aaaa0001-0000-0000-0000-000000000021', email: 'inquilino2@example.com',         full_name: 'Raúl Méndez Sanz',       password: 'demo-Pass-1234' },
 ];
 
-async function ensureUser(u: SeedUser) {
+async function ensureUser(u: SeedUser, existingByEmail: Map<string, string>) {
+  // If a user with this email already exists under a different id (e.g. an
+  // earlier run that didn't pin the id), remove it so we can recreate it with
+  // the stable UUID that seed.sql references.
+  const existingId = existingByEmail.get(u.email);
+  if (existingId && existingId !== u.id) {
+    await admin.auth.admin.deleteUser(existingId);
+  }
+
   const { data, error } = await admin.auth.admin.createUser({
     email: u.email,
     password: u.password,
-    user_id: u.id,
+    id: u.id,
     email_confirm: true,
     user_metadata: { full_name: u.full_name },
-  } as Parameters<typeof admin.auth.admin.createUser>[0] & { user_id: string });
+  });
 
   if (error) {
     if (error.message.includes('already') || error.status === 422) {
-      // Already exists — update password and metadata to keep deterministic.
+      // Already exists with the right id — update to keep it deterministic.
       const { error: upErr } = await admin.auth.admin.updateUserById(u.id, {
         password: u.password,
         email: u.email,
@@ -86,9 +94,21 @@ async function ensureUser(u: SeedUser) {
 
 async function main() {
   console.log(`Seeding ${USERS.length} users into ${SUPABASE_URL}...`);
+
+  // Snapshot existing users once so we can detect stale ids by email.
+  const existingByEmail = new Map<string, string>();
+  const { data: list, error: listErr } = await admin.auth.admin.listUsers({
+    page: 1,
+    perPage: 1000,
+  });
+  if (listErr) throw listErr;
+  for (const x of list.users) {
+    if (x.email) existingByEmail.set(x.email, x.id);
+  }
+
   for (const u of USERS) {
     try {
-      await ensureUser(u);
+      await ensureUser(u, existingByEmail);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
       console.error(`✗ ${u.email}: ${msg}`);

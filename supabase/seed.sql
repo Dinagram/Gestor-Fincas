@@ -1,18 +1,79 @@
 -- =====================================================================
 -- Seed — Comunidad "Dr. Domagk 2"
 -- =====================================================================
--- Requires: auth.users already populated via `pnpm db:seed-users`.
--- If the users do NOT exist yet, the dependent inserts (members,
--- issues, comments, supports) silently skip via "WHERE EXISTS" guards
--- so this file is safe to run any time. Re-run `pnpm db:reset` after
--- seeding users to fully populate.
+-- Self-contained: `supabase db reset` recreates the WHOLE database
+-- (including the auth schema), so the demo users are seeded here in
+-- auth.users directly rather than via an external script. The
+-- on_auth_user_created trigger then creates matching public.profiles.
 --
--- Recommended bootstrap (only the first time):
---   pnpm db:setup     # runs:  db:reset → db:seed-users → db:reset
+-- Bootstrap / refresh (single command):
+--   pnpm db:reset
 --
--- This seed is idempotent (uses ON CONFLICT) so `supabase db reset`
--- can be re-run safely.
+-- All demo users share the password: demo-Pass-1234
+--
+-- This seed is idempotent (uses ON CONFLICT) so it can be re-run safely.
 -- =====================================================================
+
+-- ---- Auth users (local demo; password = demo-Pass-1234) -------------
+-- Stable UUIDs (aaaa0001-…) keep the seed deterministic across resets.
+insert into auth.users (
+  instance_id, id, aud, role, email, encrypted_password,
+  email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
+  confirmation_token, email_change, email_change_token_new, recovery_token,
+  created_at, updated_at
+)
+select
+  '00000000-0000-0000-0000-000000000000',
+  x.id,
+  'authenticated',
+  'authenticated',
+  x.email,
+  crypt('demo-Pass-1234', gen_salt('bf')),
+  now(),
+  '{"provider":"email","providers":["email"]}'::jsonb,
+  jsonb_build_object('full_name', x.full_name, 'email_verified', true),
+  '', '', '', '',
+  now(),
+  now()
+from (values
+  ('aaaa0001-0000-0000-0000-000000000001'::uuid, 'miguel.fortes@dinagram.es',  'Miguel Fortes'),
+  ('aaaa0001-0000-0000-0000-000000000002'::uuid, 'admin@dr-domagk-2.com',      'Carlos Ruiz Vázquez'),
+  ('aaaa0001-0000-0000-0000-000000000003'::uuid, 'maria.garcia@example.com',    'María García López'),
+  ('aaaa0001-0000-0000-0000-000000000004'::uuid, 'pedro.fernandez@example.com', 'Pedro Fernández Soto'),
+  ('aaaa0001-0000-0000-0000-000000000005'::uuid, 'beatriz.romero@example.com',  'Beatriz Romero Díaz'),
+  ('aaaa0001-0000-0000-0000-000000000006'::uuid, 'juan.martinez@example.com',   'Juan Martínez Ruiz'),
+  ('aaaa0001-0000-0000-0000-000000000007'::uuid, 'isabel.sanchez@example.com',  'Isabel Sánchez Moreno'),
+  ('aaaa0001-0000-0000-0000-000000000008'::uuid, 'antonio.lopez@example.com',   'Antonio López Gil'),
+  ('aaaa0001-0000-0000-0000-000000000009'::uuid, 'carmen.diaz@example.com',     'Carmen Díaz Castillo'),
+  ('aaaa0001-0000-0000-0000-000000000010'::uuid, 'francisco.gomez@example.com', 'Francisco Gómez Ortega'),
+  ('aaaa0001-0000-0000-0000-000000000011'::uuid, 'lucia.jimenez@example.com',   'Lucía Jiménez Romero'),
+  ('aaaa0001-0000-0000-0000-000000000012'::uuid, 'david.alvarez@example.com',   'David Álvarez Núñez'),
+  ('aaaa0001-0000-0000-0000-000000000013'::uuid, 'pilar.molina@example.com',    'Pilar Molina Vargas'),
+  ('aaaa0001-0000-0000-0000-000000000014'::uuid, 'javier.serrano@example.com',  'Javier Serrano Pardo'),
+  ('aaaa0001-0000-0000-0000-000000000015'::uuid, 'elena.castro@example.com',    'Elena Castro Hidalgo'),
+  ('aaaa0001-0000-0000-0000-000000000016'::uuid, 'manuel.ortiz@example.com',    'Manuel Ortiz Lara'),
+  ('aaaa0001-0000-0000-0000-000000000017'::uuid, 'rosa.delgado@example.com',    'Rosa Delgado Marín'),
+  ('aaaa0001-0000-0000-0000-000000000018'::uuid, 'sergio.iglesias@example.com', 'Sergio Iglesias Pena'),
+  ('aaaa0001-0000-0000-0000-000000000019'::uuid, 'monica.parra@example.com',    'Mónica Parra Bravo'),
+  ('aaaa0001-0000-0000-0000-000000000020'::uuid, 'inquilino1@example.com',      'Andrea Vidal Cano'),
+  ('aaaa0001-0000-0000-0000-000000000021'::uuid, 'inquilino2@example.com',      'Raúl Méndez Sanz')
+) as x(id, email, full_name)
+on conflict (id) do nothing;
+
+-- Email identities (GoTrue requires these for email/password login).
+insert into auth.identities (
+  provider_id, user_id, identity_data, provider,
+  last_sign_in_at, created_at, updated_at
+)
+select
+  u.id::text,
+  u.id,
+  jsonb_build_object('sub', u.id::text, 'email', u.email, 'email_verified', true),
+  'email',
+  now(), now(), now()
+from auth.users u
+where u.id::text like 'aaaa0001-%'
+on conflict (provider_id, provider) do nothing;
 
 -- ---- Community ------------------------------------------------------
 insert into public.communities (id, name, address, cif, postal_code, city, province, plan)
