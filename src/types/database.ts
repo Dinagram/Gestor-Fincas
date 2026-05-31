@@ -37,6 +37,7 @@ export type Database = {
       announcement_reads: {
         Row: {
           acknowledged_at: string | null
+          acknowledged_from_ip: unknown
           announcement_id: string
           community_id: string
           profile_id: string
@@ -44,6 +45,7 @@ export type Database = {
         }
         Insert: {
           acknowledged_at?: string | null
+          acknowledged_from_ip?: unknown
           announcement_id: string
           community_id: string
           profile_id: string
@@ -51,6 +53,7 @@ export type Database = {
         }
         Update: {
           acknowledged_at?: string | null
+          acknowledged_from_ip?: unknown
           announcement_id?: string
           community_id?: string
           profile_id?: string
@@ -1041,6 +1044,251 @@ export type Database = {
         }
         Relationships: []
       }
+      room_booking_participants: {
+        Row: {
+          booking_id: string
+          community_id: string
+          created_at: string
+          guest_name: string | null
+          id: string
+          profile_id: string | null
+        }
+        Insert: {
+          booking_id: string
+          community_id: string
+          created_at?: string
+          guest_name?: string | null
+          id?: string
+          profile_id?: string | null
+        }
+        Update: {
+          booking_id?: string
+          community_id?: string
+          created_at?: string
+          guest_name?: string | null
+          id?: string
+          profile_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_booking_participants_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "room_bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "room_booking_participants_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "room_booking_participants_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      room_booking_rules: {
+        Row: {
+          community_id: string
+          created_at: string
+          id: string
+          max_attendees: number | null
+          max_duration_hours: number
+          max_per_unit_per_month: number
+          min_advance_hours: number
+          room_id: string
+          rules_text: string | null
+          updated_at: string
+        }
+        Insert: {
+          community_id: string
+          created_at?: string
+          id?: string
+          max_attendees?: number | null
+          max_duration_hours?: number
+          max_per_unit_per_month?: number
+          min_advance_hours?: number
+          room_id: string
+          rules_text?: string | null
+          updated_at?: string
+        }
+        Update: {
+          community_id?: string
+          created_at?: string
+          id?: string
+          max_attendees?: number | null
+          max_duration_hours?: number
+          max_per_unit_per_month?: number
+          min_advance_hours?: number
+          room_id?: string
+          rules_text?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_booking_rules_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "room_booking_rules_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: true
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      room_bookings: {
+        Row: {
+          attendees: number | null
+          cancel_reason: string | null
+          cancelled_at: string | null
+          category: Database["public"]["Enums"]["booking_category"]
+          community_id: string
+          created_at: string
+          created_by: string
+          ends_at: string
+          id: string
+          kind: Database["public"]["Enums"]["booking_kind"]
+          purpose: string
+          room_id: string
+          rules_accepted_at: string | null
+          starts_at: string
+          status: Database["public"]["Enums"]["booking_status"]
+          unit_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          attendees?: number | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          category?: Database["public"]["Enums"]["booking_category"]
+          community_id: string
+          created_at?: string
+          created_by: string
+          ends_at: string
+          id?: string
+          kind?: Database["public"]["Enums"]["booking_kind"]
+          purpose: string
+          room_id: string
+          rules_accepted_at?: string | null
+          starts_at: string
+          status?: Database["public"]["Enums"]["booking_status"]
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          attendees?: number | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          category?: Database["public"]["Enums"]["booking_category"]
+          community_id?: string
+          created_at?: string
+          created_by?: string
+          ends_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["booking_kind"]
+          purpose?: string
+          room_id?: string
+          rules_accepted_at?: string | null
+          starts_at?: string
+          status?: Database["public"]["Enums"]["booking_status"]
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_bookings_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "room_bookings_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "room_bookings_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "room_bookings_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rooms: {
+        Row: {
+          capacity: number
+          close_hour: number
+          community_id: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          open_hour: number
+          out_of_service_reason: string | null
+          requires_approval: boolean
+          status: Database["public"]["Enums"]["room_status"]
+          updated_at: string
+        }
+        Insert: {
+          capacity?: number
+          close_hour?: number
+          community_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          open_hour?: number
+          out_of_service_reason?: string | null
+          requires_approval?: boolean
+          status?: Database["public"]["Enums"]["room_status"]
+          updated_at?: string
+        }
+        Update: {
+          capacity?: number
+          close_hour?: number
+          community_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          open_hour?: number
+          out_of_service_reason?: string | null
+          requires_approval?: boolean
+          status?: Database["public"]["Enums"]["room_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rooms_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       units: {
         Row: {
           coefficient: number
@@ -1106,6 +1354,9 @@ export type Database = {
     }
     Enums: {
       announcement_type: "aviso" | "convocatoria" | "resolucion" | "urgente"
+      booking_category: "reunion" | "cumpleanos" | "deporte" | "taller" | "otro"
+      booking_kind: "vecino" | "comunidad" | "bloqueo"
+      booking_status: "pendiente" | "confirmada" | "cancelada" | "completada"
       budget_kind: "presupuestado" | "ejecutado"
       document_folder:
         | "actas"
@@ -1142,6 +1393,7 @@ export type Database = {
       plan_tier: "free" | "pro" | "enterprise"
       poll_status: "draft" | "active" | "closed" | "cancelled"
       poll_type: "binary" | "multiple" | "budget"
+      room_status: "disponible" | "fuera_servicio"
       unit_type: "vivienda" | "local" | "garaje" | "trastero"
       vote_choice: "favor" | "contra" | "abstencion"
     }
@@ -1275,6 +1527,9 @@ export const Constants = {
   public: {
     Enums: {
       announcement_type: ["aviso", "convocatoria", "resolucion", "urgente"],
+      booking_category: ["reunion", "cumpleanos", "deporte", "taller", "otro"],
+      booking_kind: ["vecino", "comunidad", "bloqueo"],
+      booking_status: ["pendiente", "confirmada", "cancelada", "completada"],
       budget_kind: ["presupuestado", "ejecutado"],
       document_folder: [
         "actas",
@@ -1315,6 +1570,7 @@ export const Constants = {
       plan_tier: ["free", "pro", "enterprise"],
       poll_status: ["draft", "active", "closed", "cancelled"],
       poll_type: ["binary", "multiple", "budget"],
+      room_status: ["disponible", "fuera_servicio"],
       unit_type: ["vivienda", "local", "garaje", "trastero"],
       vote_choice: ["favor", "contra", "abstencion"],
     },

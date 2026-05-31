@@ -377,3 +377,142 @@ values
   ('11111111-1111-1111-1111-111111111111', 'certificados','Certificado eficiencia energética.pdf','11111111-1111-1111-1111-111111111111/documents/certificados/eficiencia.pdf',      201000, 'application/pdf', 2023, 'aaaa0001-0000-0000-0000-000000000002', now() - interval '600 days'),
   ('11111111-1111-1111-1111-111111111111', 'otros',       'Plano edificio.pdf',                 '11111111-1111-1111-1111-111111111111/documents/otros/plano.pdf',                 678000, 'application/pdf', 2018, 'aaaa0001-0000-0000-0000-000000000002', now() - interval '500 days'),
   ('11111111-1111-1111-1111-111111111111', 'otros',       'Listado proveedores.pdf',            '11111111-1111-1111-1111-111111111111/documents/otros/proveedores.pdf',           45000,  'application/pdf', 2026, 'aaaa0001-0000-0000-0000-000000000002', now() - interval '20 days');
+
+-- ---- Sala Multiusos: room + reglas ----------------------------------
+insert into public.rooms (id, community_id, name, description, capacity, status, open_hour, close_hour, requires_approval)
+values (
+  '55555555-0000-0000-0000-000000000001',
+  '11111111-1111-1111-1111-111111111111',
+  'Sala Multiusos',
+  'Espacio común de la comunidad para reuniones vecinales, talleres, celebraciones y actividades. Equipada con mesas, sillas y pequeña cocina office.',
+  30,
+  'disponible',
+  9,
+  22,
+  false
+)
+on conflict (id) do nothing;
+
+insert into public.room_booking_rules (community_id, room_id, max_per_unit_per_month, min_advance_hours, max_duration_hours, max_attendees, rules_text)
+values (
+  '11111111-1111-1111-1111-111111111111',
+  '55555555-0000-0000-0000-000000000001',
+  2, 48, 4, 30,
+  'Acceso exclusivo a residentes · Los invitados deben ir siempre acompañados de un residente · Es obligatorio dejar la sala limpia tras su uso · El solicitante es responsable de los daños ocasionados · Debe respetarse el horario de descanso · No se admiten mascotas.'
+)
+on conflict (room_id) do nothing;
+
+-- ---- Sala Multiusos: reservas demo (timestamps relativos a now()) ----
+-- Base = medianoche de hoy → franjas en horas exactas.
+insert into public.room_bookings
+  (id, community_id, room_id, unit_id, created_by, starts_at, ends_at, purpose, category, attendees, status, kind, rules_accepted_at)
+values
+  -- Pasadas (completadas)
+  ('55550000-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111', '55555555-0000-0000-0000-000000000001',
+   (select unit_id from public.community_members where community_id = '11111111-1111-1111-1111-111111111111' and profile_id = 'aaaa0001-0000-0000-0000-000000000003' limit 1),
+   'aaaa0001-0000-0000-0000-000000000003',
+   (date_trunc('day', now() AT TIME ZONE 'Europe/Madrid') AT TIME ZONE 'Europe/Madrid') - interval '10 days' + interval '17 hours',
+   (date_trunc('day', now() AT TIME ZONE 'Europe/Madrid') AT TIME ZONE 'Europe/Madrid') - interval '10 days' + interval '19 hours',
+   'Reunión de la escalera B', 'reunion', 8, 'completada', 'vecino',
+   (date_trunc('day', now() AT TIME ZONE 'Europe/Madrid') AT TIME ZONE 'Europe/Madrid') - interval '12 days'),
+
+  ('55550000-0000-0000-0000-000000000002', '11111111-1111-1111-1111-111111111111', '55555555-0000-0000-0000-000000000001',
+   (select unit_id from public.community_members where community_id = '11111111-1111-1111-1111-111111111111' and profile_id = 'aaaa0001-0000-0000-0000-000000000010' limit 1),
+   'aaaa0001-0000-0000-0000-000000000010',
+   (date_trunc('day', now() AT TIME ZONE 'Europe/Madrid') AT TIME ZONE 'Europe/Madrid') - interval '6 days' + interval '11 hours',
+   (date_trunc('day', now() AT TIME ZONE 'Europe/Madrid') AT TIME ZONE 'Europe/Madrid') - interval '6 days' + interval '13 hours',
+   'Taller de manualidades infantil', 'taller', 12, 'completada', 'vecino',
+   (date_trunc('day', now() AT TIME ZONE 'Europe/Madrid') AT TIME ZONE 'Europe/Madrid') - interval '9 days'),
+
+  -- Pasada cancelada
+  ('55550000-0000-0000-0000-000000000003', '11111111-1111-1111-1111-111111111111', '55555555-0000-0000-0000-000000000001',
+   (select unit_id from public.community_members where community_id = '11111111-1111-1111-1111-111111111111' and profile_id = 'aaaa0001-0000-0000-0000-000000000013' limit 1),
+   'aaaa0001-0000-0000-0000-000000000013',
+   (date_trunc('day', now() AT TIME ZONE 'Europe/Madrid') AT TIME ZONE 'Europe/Madrid') - interval '4 days' + interval '18 hours',
+   (date_trunc('day', now() AT TIME ZONE 'Europe/Madrid') AT TIME ZONE 'Europe/Madrid') - interval '4 days' + interval '21 hours',
+   'Cumpleaños infantil', 'cumpleanos', 18, 'cancelada', 'vecino',
+   (date_trunc('day', now() AT TIME ZONE 'Europe/Madrid') AT TIME ZONE 'Europe/Madrid') - interval '7 days'),
+
+  -- Evento comunitario en curso AHORA mismo (banner "reservada para conserjería")
+  ('55550000-0000-0000-0000-000000000004', '11111111-1111-1111-1111-111111111111', '55555555-0000-0000-0000-000000000001',
+   null,
+   'aaaa0001-0000-0000-0000-000000000002',
+   now() - interval '30 minutes',
+   now() + interval '90 minutes',
+   'Uso de conserjería — recepción de paquetería', 'otro', null, 'confirmada', 'comunidad',
+   null),
+
+  -- Próximas confirmadas (vecinos)
+  ('55550000-0000-0000-0000-000000000005', '11111111-1111-1111-1111-111111111111', '55555555-0000-0000-0000-000000000001',
+   (select unit_id from public.community_members where community_id = '11111111-1111-1111-1111-111111111111' and profile_id = 'aaaa0001-0000-0000-0000-000000000003' limit 1),
+   'aaaa0001-0000-0000-0000-000000000003',
+   (date_trunc('day', now() AT TIME ZONE 'Europe/Madrid') AT TIME ZONE 'Europe/Madrid') + interval '3 days' + interval '18 hours',
+   (date_trunc('day', now() AT TIME ZONE 'Europe/Madrid') AT TIME ZONE 'Europe/Madrid') + interval '3 days' + interval '20 hours',
+   'Reunión de vecinos — derrama fachada', 'reunion', 15, 'confirmada', 'vecino',
+   now() - interval '1 day'),
+
+  ('55550000-0000-0000-0000-000000000006', '11111111-1111-1111-1111-111111111111', '55555555-0000-0000-0000-000000000001',
+   (select unit_id from public.community_members where community_id = '11111111-1111-1111-1111-111111111111' and profile_id = 'aaaa0001-0000-0000-0000-000000000005' limit 1),
+   'aaaa0001-0000-0000-0000-000000000005',
+   (date_trunc('day', now() AT TIME ZONE 'Europe/Madrid') AT TIME ZONE 'Europe/Madrid') + interval '4 days' + interval '10 hours',
+   (date_trunc('day', now() AT TIME ZONE 'Europe/Madrid') AT TIME ZONE 'Europe/Madrid') + interval '4 days' + interval '12 hours',
+   'Clase de yoga comunitaria', 'deporte', 10, 'confirmada', 'vecino',
+   now() - interval '2 days'),
+
+  ('55550000-0000-0000-0000-000000000007', '11111111-1111-1111-1111-111111111111', '55555555-0000-0000-0000-000000000001',
+   (select unit_id from public.community_members where community_id = '11111111-1111-1111-1111-111111111111' and profile_id = 'aaaa0001-0000-0000-0000-000000000011' limit 1),
+   'aaaa0001-0000-0000-0000-000000000011',
+   (date_trunc('day', now() AT TIME ZONE 'Europe/Madrid') AT TIME ZONE 'Europe/Madrid') + interval '6 days' + interval '17 hours',
+   (date_trunc('day', now() AT TIME ZONE 'Europe/Madrid') AT TIME ZONE 'Europe/Madrid') + interval '6 days' + interval '20 hours',
+   'Cumpleaños infantil', 'cumpleanos', 20, 'confirmada', 'vecino',
+   now() - interval '3 hours'),
+
+  ('55550000-0000-0000-0000-000000000008', '11111111-1111-1111-1111-111111111111', '55555555-0000-0000-0000-000000000001',
+   (select unit_id from public.community_members where community_id = '11111111-1111-1111-1111-111111111111' and profile_id = 'aaaa0001-0000-0000-0000-000000000007' limit 1),
+   'aaaa0001-0000-0000-0000-000000000007',
+   (date_trunc('day', now() AT TIME ZONE 'Europe/Madrid') AT TIME ZONE 'Europe/Madrid') + interval '9 days' + interval '19 hours',
+   (date_trunc('day', now() AT TIME ZONE 'Europe/Madrid') AT TIME ZONE 'Europe/Madrid') + interval '9 days' + interval '21 hours',
+   'Taller de cocina vecinal', 'taller', 14, 'confirmada', 'vecino',
+   now() - interval '5 hours'),
+
+  -- Reserva propia de Miguel (junta) para demostrar "mis reservas"
+  ('55550000-0000-0000-0000-000000000009', '11111111-1111-1111-1111-111111111111', '55555555-0000-0000-0000-000000000001',
+   (select unit_id from public.community_members where community_id = '11111111-1111-1111-1111-111111111111' and profile_id = 'aaaa0001-0000-0000-0000-000000000001' limit 1),
+   'aaaa0001-0000-0000-0000-000000000001',
+   (date_trunc('day', now() AT TIME ZONE 'Europe/Madrid') AT TIME ZONE 'Europe/Madrid') + interval '5 days' + interval '11 hours',
+   (date_trunc('day', now() AT TIME ZONE 'Europe/Madrid') AT TIME ZONE 'Europe/Madrid') + interval '5 days' + interval '13 hours',
+   'Reunión grupo de compras', 'reunion', 6, 'confirmada', 'vecino',
+   now() - interval '6 hours'),
+
+  -- Evento comunitario futuro (asamblea)
+  ('55550000-0000-0000-0000-000000000010', '11111111-1111-1111-1111-111111111111', '55555555-0000-0000-0000-000000000001',
+   null,
+   'aaaa0001-0000-0000-0000-000000000002',
+   (date_trunc('day', now() AT TIME ZONE 'Europe/Madrid') AT TIME ZONE 'Europe/Madrid') + interval '15 days' + interval '19 hours',
+   (date_trunc('day', now() AT TIME ZONE 'Europe/Madrid') AT TIME ZONE 'Europe/Madrid') + interval '15 days' + interval '21 hours',
+   'Asamblea ordinaria de vecinos', 'reunion', 30, 'confirmada', 'comunidad',
+   null),
+
+  -- Bloqueo administrativo (mantenimiento)
+  ('55550000-0000-0000-0000-000000000011', '11111111-1111-1111-1111-111111111111', '55555555-0000-0000-0000-000000000001',
+   null,
+   'aaaa0001-0000-0000-0000-000000000002',
+   (date_trunc('day', now() AT TIME ZONE 'Europe/Madrid') AT TIME ZONE 'Europe/Madrid') + interval '7 days' + interval '9 hours',
+   (date_trunc('day', now() AT TIME ZONE 'Europe/Madrid') AT TIME ZONE 'Europe/Madrid') + interval '7 days' + interval '14 hours',
+   'Mantenimiento del suelo técnico', 'otro', null, 'confirmada', 'bloqueo',
+   null)
+on conflict (id) do nothing;
+
+update public.room_bookings
+   set cancelled_at = (date_trunc('day', now() AT TIME ZONE 'Europe/Madrid') AT TIME ZONE 'Europe/Madrid') - interval '6 days',
+       cancel_reason = 'Cambio de fecha de la celebración'
+ where id = '55550000-0000-0000-0000-000000000003';
+
+-- ---- Participantes de una reserva ----------------------------------
+insert into public.room_booking_participants (community_id, booking_id, profile_id, guest_name)
+values
+  ('11111111-1111-1111-1111-111111111111', '55550000-0000-0000-0000-000000000005', 'aaaa0001-0000-0000-0000-000000000003', null),
+  ('11111111-1111-1111-1111-111111111111', '55550000-0000-0000-0000-000000000005', 'aaaa0001-0000-0000-0000-000000000004', null),
+  ('11111111-1111-1111-1111-111111111111', '55550000-0000-0000-0000-000000000005', 'aaaa0001-0000-0000-0000-000000000006', null),
+  ('11111111-1111-1111-1111-111111111111', '55550000-0000-0000-0000-000000000005', null, 'Invitado externo (perito)')
+on conflict do nothing;

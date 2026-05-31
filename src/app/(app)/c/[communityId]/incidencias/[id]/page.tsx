@@ -10,6 +10,7 @@ import { createServerClient } from '@/lib/supabase/server';
 import { ISSUE_CATEGORY_LABEL, ISSUE_STATUS_LABEL } from '@/lib/constants';
 import { formatDateTime, relativeTime } from '@/lib/date';
 
+import { AttachmentList } from '../_components/attachment-list';
 import { IssueChat } from '../_components/issue-chat';
 import { IssueStatusMenu } from '../_components/issue-status-menu';
 import { IssueSupportButton } from '../_components/issue-support-button';
@@ -34,7 +35,7 @@ export default async function IssueDetailPage({ params }: { params: Params }) {
 
   if (!issue) notFound();
 
-  const [commentsRes, historyRes, supportRes, mySupportRes, userRes] = await Promise.all([
+  const [commentsRes, historyRes, supportRes, mySupportRes, userRes, attachmentsRes] = await Promise.all([
     supabase
       .from('issue_comments')
       .select('id, body, is_system, created_at, author_id, profiles!issue_comments_author_id_fkey(full_name, email)')
@@ -59,6 +60,11 @@ export default async function IssueDetailPage({ params }: { params: Params }) {
       return { count: count ?? 0 };
     }),
     supabase.auth.getUser(),
+    supabase
+      .from('issue_attachments')
+      .select('*')
+      .eq('issue_id', id)
+      .order('created_at', { ascending: true }),
   ]);
 
   const supportCount = supportRes.count ?? 0;
@@ -137,6 +143,11 @@ export default async function IssueDetailPage({ params }: { params: Params }) {
         />
 
         <aside className="space-y-4">
+          {(attachmentsRes.data ?? []).length > 0 && (
+            <Card className="p-4">
+              <AttachmentList attachments={attachmentsRes.data ?? []} />
+            </Card>
+          )}
           <Card className="p-4">
             <h3 className="mb-3 text-sm font-semibold">Historial</h3>
             <ol className="space-y-3 text-xs">

@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Loader2, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -18,7 +17,6 @@ interface Props {
 }
 
 export function LoginForm({ redirectTo, initialError }: Props) {
-  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [mode, setMode] = useState<'magic' | 'password'>('magic');
@@ -54,8 +52,8 @@ export function LoginForm({ redirectTo, initialError }: Props) {
         setError(error.message);
         return;
       }
-      router.replace(redirectTo);
-      router.refresh();
+      sessionStorage.setItem('fresh_login', '1');
+      window.location.replace(redirectTo);
     });
   }
 

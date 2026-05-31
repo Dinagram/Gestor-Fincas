@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import { LogOut, Moon, Sun, User } from 'lucide-react';
+import { ChevronUp, LogOut, Moon, Sun, User } from 'lucide-react';
 
 import { AvatarGradient } from '@/components/shared/avatar-gradient';
 import { Button } from '@/components/ui/button';
@@ -22,9 +22,10 @@ interface Props {
   fullName: string | null;
   email: string;
   role: Role;
+  variant?: 'topbar' | 'sidebar';
 }
 
-export function UserMenu({ fullName, email, role }: Props) {
+export function UserMenu({ fullName, email, role, variant = 'topbar' }: Props) {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
 
@@ -35,8 +36,17 @@ export function UserMenu({ fullName, email, role }: Props) {
     router.refresh();
   }
 
-  return (
-    <DropdownMenu>
+  const trigger =
+    variant === 'sidebar' ? (
+      <DropdownMenuTrigger className="flex w-full items-center gap-3 rounded-lg p-2 text-left outline-none transition-colors hover:bg-dd-beige/10 focus-visible:ring-2 focus-visible:ring-dd-beige/50">
+        <AvatarGradient name={fullName ?? email} seed={email} />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-medium text-dd-beige">{fullName ?? email}</p>
+          <p className="truncate text-[11px] text-dd-beige/60">{ROLE_LABEL[role]}</p>
+        </div>
+        <ChevronUp className="h-4 w-4 shrink-0 text-dd-beige/60" />
+      </DropdownMenuTrigger>
+    ) : (
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="h-9 gap-2 px-2">
           <AvatarGradient name={fullName ?? email} seed={email} />
@@ -46,7 +56,16 @@ export function UserMenu({ fullName, email, role }: Props) {
           </div>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
+    );
+
+  return (
+    <DropdownMenu>
+      {trigger}
+      <DropdownMenuContent
+        align={variant === 'sidebar' ? 'start' : 'end'}
+        side={variant === 'sidebar' ? 'top' : 'bottom'}
+        className="w-56"
+      >
         <DropdownMenuLabel>
           <p className="text-sm font-medium leading-tight">{fullName ?? 'Sin nombre'}</p>
           <p className="text-xs text-muted-foreground">{email}</p>

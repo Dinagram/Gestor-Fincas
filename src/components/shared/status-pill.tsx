@@ -15,12 +15,14 @@ const statusVariants = cva(
   {
     variants: {
       tone: {
-        slate: 'border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300',
+        // Neutros calentados a la paleta DD² (taupe/beige/tinta)
+        slate: 'border-dd-taupe/25 bg-dd-beige text-dd-tinta dark:border-dd-beige/15 dark:bg-dd-bronce dark:text-dd-beige',
+        zinc:  'border-dd-taupe/20 bg-dd-papel text-dd-taupe dark:border-dd-beige/10 dark:bg-dd-bronce/70 dark:text-dd-beige/80',
+        // Tonos funcionales (significado de estado/urgencia) — se mantienen
         blue:  'border-blue-200 bg-blue-100 text-blue-700 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-300',
         amber: 'border-amber-200 bg-amber-100 text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300',
         green: 'border-emerald-200 bg-emerald-100 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300',
         red:   'border-red-200 bg-red-100 text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300',
-        zinc:  'border-zinc-200 bg-zinc-100 text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300',
       },
     },
     defaultVariants: { tone: 'slate' },

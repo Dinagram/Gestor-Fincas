@@ -1,0 +1,218 @@
+{
+  "main": {
+    "id": "db6f85fadcdf6f17",
+    "type": "split",
+    "children": [
+      {
+        "id": "834e8e091552ed6d",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "594953fddccb26c7",
+            "type": "leaf",
+            "state": {
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "Vista gráfica"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "e565400ba09d0ece",
+    "type": "split",
+    "children": [
+      {
+        "id": "ceeb6c0e52ea7641",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "726c2b627ffed7a0",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Explorador de archivos"
+            }
+          },
+          {
+            "id": "29cdf59ff82735b7",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Buscar"
+            }
+          },
+          {
+            "id": "fc751089a0e4cdbe",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Marcadores"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 200
+  },
+  "right": {
+    "id": "63984055884935ab",
+    "type": "split",
+    "children": [
+      {
+        "id": "bda3cca538d260fd",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "e985177a3c780715",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Enlaces entrantes"
+            }
+          },
+          {
+            "id": "ae8b57a96e0fe1e6",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Enlaces salientes"
+            }
+          },
+          {
+            "id": "1e090370de2e9193",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Etiquetas"
+            }
+          },
+          {
+            "id": "c22ae07a8c0d9f12",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "Todas las propiedades"
+            }
+          },
+          {
+            "id": "ca8baf2fbcb3fbe2",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Esquema"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Abrir selector rápido": false,
+      "graph:Abrir vista gráfica": false,
+      "canvas:Crear nuevo lienzo": false,
+      "daily-notes:Abrir la nota de hoy": false,
+      "templates:Insertar plantilla": false,
+      "command-palette:Abrir paleta de comandos": false,
+      "bases:Crear nueva base": false
+    }
+  },
+  "active": "594953fddccb26c7",
+  "lastOpenFiles": [
+    "modules/auth.md.tmp.27596.5bfd79bf68d6",
+    "modules/dashboard.md.tmp.27596.8189ded00307",
+    "modules/comunicados.md",
+    "modules/votaciones.md.tmp.27596.c80f19795107",
+    "modules/comunicados.md.tmp.27596.ca7af9cb4517",
+    "system/gestionfinca.md",
+    "modules/documentos.md",
+    "index.md",
+    "modules/presupuesto.md",
+    "decisions/dec-refactoring.md.tmp.27596.27753e9d8ea0",
+    "files/lib-permissions.md",
+    "decisions/dec-server-actions.md.tmp.27596.6d3b1c97be81",
+    "decisions/dec-rls-force.md.tmp.27596.9f212e2da7e9",
+    "decisions/dec-saas-pivot.md.tmp.27596.9ae8f32f6ea3",
+    "flows/flow-booking-create.md.tmp.27596.57fbf8617f30",
+    "flows/flow-mutation.md.tmp.27596.53202b2cd52d",
+    "files/action-polls.md.tmp.27596.33878e11d6be",
+    "modules/reservas.md",
+    "decisions/dec-never-type.md",
+    "decisions/dec-refactoring.md",
+    "decisions/dec-server-actions.md",
+    "decisions/dec-rls-force.md",
+    "decisions/dec-saas-pivot.md",
+    "concepts/con-community-isolation.md",
+    "concepts/con-rls.md",
+    "flows/flow-booking-create.md",
+    "flows/flow-mutation.md",
+    "flows/flow-auth.md",
+    "files/action-polls.md",
+    "files/action-announcements.md",
+    "files/action-issues.md",
+    "files/action-bookings.md",
+    "files/hook-form-transition.md",
+    "files/types-database.md",
+    "files/middleware.md",
+    "files/lib-require-user.md"
+  ]
+}

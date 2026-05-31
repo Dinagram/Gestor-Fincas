@@ -12,6 +12,8 @@ export type Action =
   | 'announcement.delete'
   | 'poll.create'
   | 'poll.vote_economic'
+  | 'booking.create'
+  | 'booking.manage'
   | 'member.invite'
   | 'community.edit';
 
@@ -33,6 +35,8 @@ const POLICY: Record<Action, Role[]> = {
   'announcement.delete':  ['admin_finca'],
   'poll.create':          ['junta', 'admin_finca'],
   'poll.vote_economic':   ['propietario', 'junta', 'admin_finca'],
+  'booking.create':       ['inquilino', 'propietario', 'junta', 'admin_finca'],
+  'booking.manage':       ['junta', 'admin_finca'],
   'member.invite':        ['admin_finca'],
   'community.edit':       ['admin_finca'],
 };

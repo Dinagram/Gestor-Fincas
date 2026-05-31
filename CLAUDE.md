@@ -1,5 +1,15 @@
 # GestiónFinca — Contexto de Producto
 
+## Regla de Memoria Externa (Obligatoria)
+
+El sistema debe mantener actualizado de forma continua el vault en `/vault/` como memoria externa del proyecto.
+
+El vault es el grafo de conocimiento del proyecto en formato YAML. Ante cualquier cambio de arquitectura, nuevo módulo, decisión técnica o flujo nuevo, se deben crear o actualizar los nodos correspondientes en `/vault/` y mantener las relaciones bidireccionales del grafo.
+
+Punto de entrada: `/vault/index.yaml`
+
+---
+
 ## Descripción General
 
 GestiónFinca es una aplicación web responsive para comunidades de propietarios (fincas / edificios residenciales) en España.

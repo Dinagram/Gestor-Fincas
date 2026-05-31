@@ -12,6 +12,7 @@ import { commentIssue } from '@/actions/issues';
 import { relativeTime } from '@/lib/date';
 import { cn } from '@/lib/utils';
 import { createBrowserClient } from '@/lib/supabase/browser';
+import { AttachmentUploader } from './attachment-uploader';
 
 export interface ChatMessage {
   id: string;
@@ -28,9 +29,10 @@ interface Props {
   communityId: string;
   currentUserId: string | null;
   initialMessages: ChatMessage[];
+  onAttachmentUploaded?: () => void;
 }
 
-export function IssueChat({ issueId, currentUserId, initialMessages }: Props) {
+export function IssueChat({ issueId, communityId, currentUserId, initialMessages, onAttachmentUploaded }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [optimistic, addOptimistic] = useOptimistic<ChatMessage[], ChatMessage>(
     messages,
@@ -173,6 +175,11 @@ export function IssueChat({ issueId, currentUserId, initialMessages }: Props) {
       </div>
 
       <form onSubmit={handleSubmit} className="flex items-end gap-2 border-t p-3">
+        <AttachmentUploader
+          communityId={communityId}
+          issueId={issueId}
+          onUploaded={onAttachmentUploaded}
+        />
         <Textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}

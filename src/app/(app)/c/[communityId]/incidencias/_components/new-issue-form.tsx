@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
 
+import { createIssue } from '@/actions/issues';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,7 +21,7 @@ import {
   ISSUE_PRIORITIES,
   ISSUE_PRIORITY_LABEL,
 } from '@/lib/constants';
-import { createIssue } from '@/actions/issues';
+import { useFormTransition } from '@/hooks/use-form-transition';
 
 interface Props {
   communityId: string;
@@ -33,26 +33,15 @@ export function NewIssueForm({ communityId }: Props) {
   const [category, setCategory] = useState<string>('otros');
   const [priority, setPriority] = useState<string>('media');
   const [location, setLocation] = useState('');
-  const [pending, startTransition] = useTransition();
-  const [error, setError] = useState<string>();
+
+  // createIssue llama a redirect() internamente al tener éxito.
+  const { submit, error, pending } = useFormTransition(
+    (data: Parameters<typeof createIssue>[1]) => createIssue(communityId, data),
+  );
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError(undefined);
-    startTransition(async () => {
-      const result = await createIssue(communityId, {
-        title,
-        description,
-        category,
-        priority,
-        location,
-      });
-      if (result && 'ok' in result && !result.ok) {
-        setError(result.error);
-        toast.error(result.error);
-      }
-      // On success, the action redirects — nothing to do here.
-    });
+    submit({ title, description, category, priority, location });
   }
 
   return (

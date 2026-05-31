@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Megaphone, Users, Vote, Wrench } from 'lucide-react';
+import { Euro, Megaphone, Users, Vote, Wrench } from 'lucide-react';
 
 import { KpiCard } from '@/components/shared/kpi-card';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +7,10 @@ import { Button } from '@/components/ui/button';
 import { IssueStatusPill } from '@/components/shared/status-pill';
 import { AvatarGradient } from '@/components/shared/avatar-gradient';
 import { createServerClient } from '@/lib/supabase/server';
-import { relativeTime } from '@/lib/date';
+import { getActivePollCount, getOpenIssueCount } from '@/lib/data/community-queries';
+import { relativeTime, formatDate } from '@/lib/date';
+import { POLL_TYPE_LABEL } from '@/lib/constants';
+import { cn } from '@/lib/utils';
 
 type Params = Promise<{ communityId: string }>;
 
@@ -15,12 +18,10 @@ export default async function DashboardPage({ params }: { params: Params }) {
   const { communityId } = await params;
   const supabase = await createServerClient();
 
-  const [openIssues, recentIssues, announcements, activePolls] = await Promise.all([
-    supabase
-      .from('issues')
-      .select('id', { count: 'exact', head: true })
-      .eq('community_id', communityId)
-      .in('status', ['abierta', 'en_revision', 'en_curso']),
+  // getOpenIssueCount y getActivePollCount están cacheados: el layout ya los
+  // ejecutó en este mismo request, así que estas llamadas retornan instantáneamente.
+  const [openIssuesCount, recentIssues, announcements, activePollsCount, activePollsList] = await Promise.all([
+    getOpenIssueCount(communityId),
     supabase
       .from('issues')
       .select('id, code, title, status, priority, created_at, created_by, profiles!issues_created_by_fkey(full_name)')
@@ -33,11 +34,14 @@ export default async function DashboardPage({ params }: { params: Params }) {
       .eq('community_id', communityId)
       .order('sent_at', { ascending: false })
       .limit(3),
+    getActivePollCount(communityId),
     supabase
       .from('polls')
-      .select('id', { count: 'exact', head: true })
+      .select('id, title, type, ends_at, quorum_percent, amount')
       .eq('community_id', communityId)
-      .eq('status', 'active'),
+      .eq('status', 'active')
+      .order('ends_at', { ascending: true })
+      .limit(3),
   ]);
 
   return (
@@ -55,7 +59,7 @@ export default async function DashboardPage({ params }: { params: Params }) {
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard
           label="Incidencias abiertas"
-          value={openIssues.count ?? 0}
+          value={openIssuesCount}
           icon={Wrench}
           href={`/c/${communityId}/incidencias?estado=abierta`}
           tone="amber"
@@ -69,7 +73,7 @@ export default async function DashboardPage({ params }: { params: Params }) {
         />
         <KpiCard
           label="Votaciones activas"
-          value={activePolls.count ?? 0}
+          value={activePollsCount}
           icon={Vote}
           href={`/c/${communityId}/votaciones`}
           tone="green"
@@ -81,6 +85,50 @@ export default async function DashboardPage({ params }: { params: Params }) {
           href={`/c/${communityId}/directorio`}
         />
       </section>
+
+      {/* Active polls widget */}
+      {(activePollsList.data ?? []).length > 0 && (
+        <section>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-base">Votaciones activas</CardTitle>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href={`/c/${communityId}/votaciones`}>Ver todas</Link>
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {(activePollsList.data ?? []).map((poll) => {
+                const daysLeft = Math.max(0, Math.ceil((new Date(poll.ends_at).getTime() - Date.now()) / 86_400_000));
+                return (
+                  <Link
+                    key={poll.id}
+                    href={`/c/${communityId}/votaciones/${poll.id}`}
+                    className="flex items-start justify-between gap-3 rounded-md border bg-background p-3 transition-colors hover:border-primary/40"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">{poll.title}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {POLL_TYPE_LABEL[poll.type]} · Finaliza {formatDate(poll.ends_at, 'd MMM')}
+                      </p>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      {poll.amount != null && (
+                        <p className="flex items-center gap-0.5 text-sm font-semibold text-dd-terracota">
+                          <Euro className="h-3 w-3" />
+                          {poll.amount.toLocaleString('es-ES')}
+                        </p>
+                      )}
+                      <p className={cn('text-xs', daysLeft <= 3 ? 'text-amber-600 font-medium' : 'text-muted-foreground')}>
+                        {daysLeft === 0 ? 'Hoy' : `${daysLeft}d`}
+                      </p>
+                    </div>
+                  </Link>
+                );
+              })}
+            </CardContent>
+          </Card>
+        </section>
+      )}
 
       <section className="grid gap-4 lg:grid-cols-2">
         <Card>

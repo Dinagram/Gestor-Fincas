@@ -1,14 +1,31 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Bodoni_Moda, IBM_Plex_Mono, Spectral } from 'next/font/google';
 
 import { ThemeProvider } from '@/providers/theme-provider';
 import { Toaster } from '@/components/ui/sonner';
 
 import './globals.css';
 
-const inter = Inter({
+// Marca DD²: Bodoni Moda (titulares), Spectral (cuerpo), IBM Plex Mono (etiquetas)
+const display = Bodoni_Moda({
   subsets: ['latin'],
-  variable: '--font-inter',
+  display: 'swap',
+  variable: '--font-display',
+});
+
+const body = Spectral({
+  subsets: ['latin'],
+  display: 'swap',
+  weight: ['400', '600'],
+  style: ['normal'],
+  variable: '--font-body',
+});
+
+const mono = IBM_Plex_Mono({
+  subsets: ['latin'],
+  display: 'swap',
+  weight: ['400', '500', '600'],
+  variable: '--font-mono',
 });
 
 export const metadata: Metadata = {
@@ -20,7 +37,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body
+        className={`${display.variable} ${body.variable} ${mono.variable} font-sans antialiased`}
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

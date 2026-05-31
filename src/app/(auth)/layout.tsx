@@ -1,5 +1,5 @@
+import Image from 'next/image';
 import Link from 'next/link';
-import { Building2 } from 'lucide-react';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -7,7 +7,13 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <header className="border-b bg-background">
         <div className="container flex h-16 items-center justify-between px-4">
           <Link href="/" className="flex items-center gap-2 font-semibold">
-            <Building2 className="h-5 w-5 text-primary" />
+            <Image
+              src="/assets/brand/marca_bronce.png"
+              alt=""
+              width={28}
+              height={28}
+              className="h-7 w-7"
+            />
             <span>GestiónFinca</span>
           </Link>
           <span className="text-sm text-muted-foreground">Tu comunidad, en orden</span>

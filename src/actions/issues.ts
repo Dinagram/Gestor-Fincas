@@ -3,32 +3,15 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
-import { createServerClient } from '@/lib/supabase/server';
+import { ERR_NO_ACCESS, getUserRole } from '@/lib/auth/get-user';
 import { canDo } from '@/lib/permissions';
+import { createServerClient } from '@/lib/supabase/server';
 import {
   changeStatusSchema,
   commentIssueSchema,
   createIssueSchema,
 } from '@/lib/validators/issue';
-
-async function getUserRole(communityId: string) {
-  const supabase = await createServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error('UNAUTHENTICATED');
-
-  const { data: membership } = await supabase
-    .from('community_members')
-    .select('role')
-    .eq('profile_id', user.id)
-    .eq('community_id', communityId)
-    .eq('status', 'active')
-    .maybeSingle();
-
-  if (!membership) throw new Error('NOT_A_MEMBER');
-  return { user, role: membership.role };
-}
+import type { Database } from '@/types/database';
 
 // ====================================================================
 // Create issue
@@ -44,21 +27,17 @@ export async function createIssue(
     return { ok: false, error: parsed.error.errors[0]?.message ?? 'Datos inválidos' };
   }
 
-  let role;
+  let user, role;
   try {
-    ({ role } = await getUserRole(communityId));
+    ({ user, role } = await getUserRole(communityId));
   } catch {
-    return { ok: false, error: 'No tienes acceso a esta comunidad' };
+    return { ok: false, error: ERR_NO_ACCESS };
   }
   if (!canDo(role, 'issue.create')) {
     return { ok: false, error: 'Tu rol no permite crear incidencias' };
   }
 
   const supabase = await createServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: 'No autenticado' };
 
   const { data, error } = await supabase
     .from('issues')
@@ -66,10 +45,11 @@ export async function createIssue(
       community_id: communityId,
       title: parsed.data.title,
       description: parsed.data.description || null,
-      category: parsed.data.category,
-      priority: parsed.data.priority,
+      category: parsed.data.category as Database['public']['Enums']['issue_category'],
+      priority: parsed.data.priority as Database['public']['Enums']['issue_priority'],
       location: parsed.data.location || null,
       created_by: user.id,
+      code: '', // trg_issue_assign_code (BEFORE INSERT) overwrites this with INC-XXX
     })
     .select('id')
     .single();
@@ -88,14 +68,14 @@ export async function createIssue(
 export async function commentIssue(input: unknown) {
   const parsed = commentIssueSchema.safeParse(input);
   if (!parsed.success) {
-    return { ok: false as const, error: parsed.error.errors[0]?.message ?? 'Datos inválidos' };
+    return { ok: false, error: parsed.error.errors[0]?.message ?? 'Datos inválidos' };
   }
 
   const supabase = await createServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { ok: false as const, error: 'No autenticado' };
+  if (!user) return { ok: false, error: 'No autenticado' };
 
   // Fetch the issue to capture community_id (also enforces RLS).
   const { data: issue } = await supabase
@@ -103,7 +83,7 @@ export async function commentIssue(input: unknown) {
     .select('community_id')
     .eq('id', parsed.data.issueId)
     .maybeSingle();
-  if (!issue) return { ok: false as const, error: 'Incidencia no encontrada' };
+  if (!issue) return { ok: false, error: 'Incidencia no encontrada' };
 
   const { error } = await supabase.from('issue_comments').insert({
     issue_id: parsed.data.issueId,
@@ -112,7 +92,7 @@ export async function commentIssue(input: unknown) {
     body: parsed.data.body,
     is_system: false,
   });
-  if (error) return { ok: false as const, error: error.message };
+  if (error) return { ok: false, error: error.message };
 
   revalidatePath(`/c/${issue.community_id}/incidencias/${parsed.data.issueId}`);
   return { ok: true as const };
@@ -124,7 +104,7 @@ export async function commentIssue(input: unknown) {
 export async function changeIssueStatus(input: unknown) {
   const parsed = changeStatusSchema.safeParse(input);
   if (!parsed.success) {
-    return { ok: false as const, error: parsed.error.errors[0]?.message ?? 'Datos inválidos' };
+    return { ok: false, error: parsed.error.errors[0]?.message ?? 'Datos inválidos' };
   }
 
   const supabase = await createServerClient();
@@ -133,16 +113,16 @@ export async function changeIssueStatus(input: unknown) {
     .select('community_id, status')
     .eq('id', parsed.data.issueId)
     .maybeSingle();
-  if (!issue) return { ok: false as const, error: 'Incidencia no encontrada' };
+  if (!issue) return { ok: false, error: 'Incidencia no encontrada' };
 
   let role;
   try {
     ({ role } = await getUserRole(issue.community_id));
   } catch {
-    return { ok: false as const, error: 'No tienes acceso a esta comunidad' };
+    return { ok: false, error: ERR_NO_ACCESS };
   }
   if (!canDo(role, 'issue.change_status')) {
-    return { ok: false as const, error: 'Solo administrador o junta pueden cambiar el estado' };
+    return { ok: false, error: 'Solo administrador o junta pueden cambiar el estado' };
   }
 
   if (issue.status === parsed.data.newStatus) {
@@ -151,9 +131,9 @@ export async function changeIssueStatus(input: unknown) {
 
   const { error } = await supabase
     .from('issues')
-    .update({ status: parsed.data.newStatus })
+    .update({ status: parsed.data.newStatus as Database['public']['Enums']['issue_status'] })
     .eq('id', parsed.data.issueId);
-  if (error) return { ok: false as const, error: error.message };
+  if (error) return { ok: false, error: error.message };
 
   // The DB trigger `log_issue_status_change` already records this in
   // issue_status_history AND appends a system message to the chat.
@@ -171,14 +151,14 @@ export async function toggleIssueSupport(issueId: string) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { ok: false as const, error: 'No autenticado' };
+  if (!user) return { ok: false, error: 'No autenticado' };
 
   const { data: issue } = await supabase
     .from('issues')
     .select('community_id')
     .eq('id', issueId)
     .maybeSingle();
-  if (!issue) return { ok: false as const, error: 'Incidencia no encontrada' };
+  if (!issue) return { ok: false, error: 'Incidencia no encontrada' };
 
   const { data: existing } = await supabase
     .from('issue_supports')
@@ -202,7 +182,7 @@ export async function toggleIssueSupport(issueId: string) {
   }
 
   revalidatePath(`/c/${issue.community_id}/incidencias/${issueId}`);
-  return { ok: true as const, supported: !existing };
+  return { ok: true, supported: !existing };
 }
 
 // ====================================================================
@@ -213,8 +193,8 @@ export async function signAttachmentUrl(path: string) {
   const { data, error } = await supabase.storage
     .from('incidence-attachments')
     .createSignedUrl(path, 60);
-  if (error || !data) return { ok: false as const, error: error?.message ?? 'Error firmando URL' };
-  return { ok: true as const, url: data.signedUrl };
+  if (error || !data) return { ok: false, error: error?.message ?? 'Error firmando URL' };
+  return { ok: true, url: data.signedUrl };
 }
 
 // ====================================================================
@@ -231,14 +211,14 @@ export async function registerAttachment(input: {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { ok: false as const, error: 'No autenticado' };
+  if (!user) return { ok: false, error: 'No autenticado' };
 
   const { data: issue } = await supabase
     .from('issues')
     .select('community_id')
     .eq('id', input.issueId)
     .maybeSingle();
-  if (!issue) return { ok: false as const, error: 'Incidencia no encontrada' };
+  if (!issue) return { ok: false, error: 'Incidencia no encontrada' };
 
   const { error } = await supabase.from('issue_attachments').insert({
     issue_id: input.issueId,
@@ -249,7 +229,7 @@ export async function registerAttachment(input: {
     mime_type: input.mimeType,
     size_bytes: input.sizeBytes,
   });
-  if (error) return { ok: false as const, error: error.message };
+  if (error) return { ok: false, error: error.message };
 
   revalidatePath(`/c/${issue.community_id}/incidencias/${input.issueId}`);
   return { ok: true as const };

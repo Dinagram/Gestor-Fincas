@@ -15,53 +15,48 @@ const config: Config = {
     },
     extend: {
       colors: {
-        // shadcn tokens (CSS variables defined in globals.css)
-        border: 'hsl(var(--border))',
-        input: 'hsl(var(--input))',
-        ring: 'hsl(var(--ring))',
-        background: 'hsl(var(--background))',
-        foreground: 'hsl(var(--foreground))',
+        // shadcn tokens (CSS variables in globals.css) — OKLCH with alpha support
+        border: 'oklch(var(--border) / <alpha-value>)',
+        input: 'oklch(var(--input) / <alpha-value>)',
+        ring: 'oklch(var(--ring) / <alpha-value>)',
+        background: 'oklch(var(--background) / <alpha-value>)',
+        foreground: 'oklch(var(--foreground) / <alpha-value>)',
         primary: {
-          DEFAULT: 'hsl(var(--primary))',
-          foreground: 'hsl(var(--primary-foreground))',
+          DEFAULT: 'oklch(var(--primary) / <alpha-value>)',
+          foreground: 'oklch(var(--primary-foreground) / <alpha-value>)',
         },
         secondary: {
-          DEFAULT: 'hsl(var(--secondary))',
-          foreground: 'hsl(var(--secondary-foreground))',
+          DEFAULT: 'oklch(var(--secondary) / <alpha-value>)',
+          foreground: 'oklch(var(--secondary-foreground) / <alpha-value>)',
         },
         destructive: {
-          DEFAULT: 'hsl(var(--destructive))',
-          foreground: 'hsl(var(--destructive-foreground))',
+          DEFAULT: 'oklch(var(--destructive) / <alpha-value>)',
+          foreground: 'oklch(var(--destructive-foreground) / <alpha-value>)',
         },
         muted: {
-          DEFAULT: 'hsl(var(--muted))',
-          foreground: 'hsl(var(--muted-foreground))',
+          DEFAULT: 'oklch(var(--muted) / <alpha-value>)',
+          foreground: 'oklch(var(--muted-foreground) / <alpha-value>)',
         },
         accent: {
-          DEFAULT: 'hsl(var(--accent))',
-          foreground: 'hsl(var(--accent-foreground))',
+          DEFAULT: 'oklch(var(--accent) / <alpha-value>)',
+          foreground: 'oklch(var(--accent-foreground) / <alpha-value>)',
         },
         popover: {
-          DEFAULT: 'hsl(var(--popover))',
-          foreground: 'hsl(var(--popover-foreground))',
+          DEFAULT: 'oklch(var(--popover) / <alpha-value>)',
+          foreground: 'oklch(var(--popover-foreground) / <alpha-value>)',
         },
         card: {
-          DEFAULT: 'hsl(var(--card))',
-          foreground: 'hsl(var(--card-foreground))',
+          DEFAULT: 'oklch(var(--card) / <alpha-value>)',
+          foreground: 'oklch(var(--card-foreground) / <alpha-value>)',
         },
-        // brand scale — calibrated from mockup (#1d639b)
-        brand: {
-          50: '#eff8ff',
-          100: '#dbeefe',
-          200: '#bfe1fd',
-          300: '#93cefb',
-          400: '#60b1f8',
-          500: '#3b91f3',
-          600: '#2574e8',
-          700: '#1d5fd1',
-          800: '#1d4ea8',
-          900: '#1d639b',
-          950: '#14416a',
+        // DD² brand palette — exposed for the shell and brand accents
+        dd: {
+          bronce: 'oklch(var(--dd-bronce) / <alpha-value>)',
+          beige: 'oklch(var(--dd-beige) / <alpha-value>)',
+          papel: 'oklch(var(--dd-papel) / <alpha-value>)',
+          tinta: 'oklch(var(--dd-tinta) / <alpha-value>)',
+          taupe: 'oklch(var(--dd-taupe) / <alpha-value>)',
+          terracota: 'oklch(var(--dd-terracota) / <alpha-value>)',
         },
       },
       borderRadius: {
@@ -70,7 +65,12 @@ const config: Config = {
         sm: 'calc(var(--radius) - 4px)',
       },
       fontFamily: {
-        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
+        // cuerpo de texto = Spectral (serif de marca)
+        sans: ['var(--font-body)', 'Spectral', 'Georgia', 'serif'],
+        // titulares / cifras destacadas = Bodoni Moda
+        display: ['var(--font-display)', 'Bodoni Moda', 'Georgia', 'serif'],
+        // etiquetas / numeración = IBM Plex Mono
+        mono: ['var(--font-mono)', 'IBM Plex Mono', 'ui-monospace', 'monospace'],
       },
       keyframes: {
         'accordion-down': {
