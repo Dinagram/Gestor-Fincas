@@ -1,5 +1,105 @@
 import nodemailer from 'nodemailer'
-import { Resend } from 'resend'
+
+// ── Invitation email ─────────────────────────────────────────────────────────
+
+export type InvitationEmailParams = {
+  to: string
+  communityName: string
+  inviterName: string
+  inviteUrl: string
+  expiresAt: string
+}
+
+function createTransporter() {
+  if (process.env.SMTP_HOST) {
+    return nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT ?? 587),
+      secure: false,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    })
+  }
+  // Desarrollo local — Mailpit
+  return nodemailer.createTransport({
+    host: '127.0.0.1',
+    port: 54325,
+    secure: false,
+    ignoreTLS: true,
+  })
+}
+
+export async function sendInvitationEmail(params: InvitationEmailParams) {
+  const subject = `Invitación para unirte a ${params.communityName}`
+  const html = buildInvitationHtml(params)
+  const from = process.env.SMTP_FROM ?? 'GestionFinca <no-reply@gestionfinca.app>'
+  const transporter = createTransporter()
+  await transporter.sendMail({ from, to: params.to, subject, html })
+}
+
+function buildInvitationHtml(p: InvitationEmailParams): string {
+  return `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+
+          <!-- Header -->
+          <tr>
+            <td style="padding:24px 32px;background:#18181b;">
+              <span style="font-size:18px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;">GestiónFinca</span>
+              <span style="font-size:13px;color:#a1a1aa;margin-left:8px;">${p.communityName}</span>
+            </td>
+          </tr>
+
+          <!-- Title -->
+          <tr>
+            <td style="padding:32px 32px 0;">
+              <h1 style="margin:0;font-size:22px;font-weight:700;color:#18181b;line-height:1.3;">
+                Te han invitado a unirte
+              </h1>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:16px 32px 24px;font-size:15px;color:#3f3f46;line-height:1.6;">
+              <strong>${p.inviterName}</strong> te ha invitado a unirte a <strong>${p.communityName}</strong> en GestiónFinca.
+              Pulsa el botón para crear tu cuenta y acceder a tu comunidad.
+            </td>
+          </tr>
+
+          <!-- CTA -->
+          <tr>
+            <td style="padding:0 32px 32px;">
+              <a href="${p.inviteUrl}"
+                 style="display:inline-block;padding:12px 24px;background:#18181b;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600;">
+                Aceptar invitación
+              </a>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding:16px 32px;border-top:1px solid #f4f4f5;font-size:12px;color:#a1a1aa;">
+              Si no esperabas esta invitación, puedes ignorar este correo. El enlace caduca en 14 días.
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+}
+
+// ── Announcement email ───────────────────────────────────────────────────────
 
 export type AnnouncementEmailParams = {
   to: string[]
@@ -29,22 +129,9 @@ const TYPE_COLORS: Record<string, string> = {
 export async function sendAnnouncementEmail(params: AnnouncementEmailParams) {
   const subject = `[${TYPE_LABELS[params.type] ?? params.type}] ${params.title}`
   const html = buildAnnouncementHtml(params)
-  const from = process.env.RESEND_FROM_EMAIL ?? 'GestionFinca <no-reply@gestionfinca.app>'
-
-  if (process.env.RESEND_API_KEY) {
-    // Production: send via Resend
-    const resend = new Resend(process.env.RESEND_API_KEY)
-    await resend.emails.send({ from, to: params.to, subject, html })
-  } else {
-    // Development: send to local Inbucket SMTP (http://127.0.0.1:54324)
-    const transporter = nodemailer.createTransport({
-      host: '127.0.0.1',
-      port: 54325,
-      secure: false,
-      ignoreTLS: true,
-    })
-    await transporter.sendMail({ from, to: params.to.join(', '), subject, html })
-  }
+  const from = process.env.SMTP_FROM ?? 'GestionFinca <no-reply@gestionfinca.app>'
+  const transporter = createTransporter()
+  await transporter.sendMail({ from, to: params.to.join(', '), subject, html })
 }
 
 function buildAnnouncementHtml(p: AnnouncementEmailParams): string {
