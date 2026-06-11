@@ -8,19 +8,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { createBrowserClient } from '@/lib/supabase/browser';
-import { acceptInvitation } from '@/actions/invitations';
+import { acceptCommunityInviteLink } from '@/actions/community-invite-links';
+import { pisoSchema } from '@/lib/validators/piso';
 
 interface Props {
   token: string;
-  email: string;
   communityId: string;
-  role: string;
-  piso?: string;
 }
 
-export function AcceptInviteForm({ token, email, communityId: _communityId, role: _role, piso }: Props) {
+export function JoinCommunityForm({ token, communityId: _communityId }: Props) {
+  const [email, setEmail] = useState('');
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
+  const [piso, setPiso] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string>();
@@ -43,11 +43,19 @@ export function AcceptInviteForm({ token, email, communityId: _communityId, role
       return;
     }
 
+    const pisoCheck = pisoSchema.safeParse(piso.trim());
+    if (!pisoCheck.success) {
+      setError(pisoCheck.error.errors[0]?.message ?? 'Formato de piso inválido');
+      return;
+    }
+
     startTransition(async () => {
-      const result = await acceptInvitation(token, {
+      const result = await acceptCommunityInviteLink(token, {
+        email: email.trim(),
         fullName: fullName.trim(),
         phone: phone.trim(),
         password,
+        piso: piso.trim(),
       });
 
       if (!result.ok) {
@@ -59,14 +67,12 @@ export function AcceptInviteForm({ token, email, communityId: _communityId, role
         setExistingUserWarning(true);
       }
 
-      // Sign in with the password the user typed (or their existing password)
       const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: result.email,
+        email: email.trim(),
         password,
       });
 
       if (signInError) {
-        // Account created/linked but auto-login failed (e.g. existing user typed wrong password)
         setError(
           result.existingUser
             ? 'Tu cuenta ya existía. Entra con tu contraseña habitual.'
@@ -83,27 +89,30 @@ export function AcceptInviteForm({ token, email, communityId: _communityId, role
     <form onSubmit={handleSubmit} className="space-y-4">
       {existingUserWarning && (
         <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
-          Tu cuenta ya existía. Hemos vinculado tu email a esta comunidad. Si el acceso falla, entra con tu contraseña habitual.
+          Tu cuenta ya existía. Hemos vinculado tu email a esta comunidad.
         </div>
       )}
 
-      {/* Piso asignado — solo lectura */}
-      {piso && (
-        <div className="flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-800 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-300">
-          <span className="font-medium">Piso asignado:</span>
-          <span className="font-semibold">{piso}</span>
-        </div>
-      )}
-
-      {/* Email — locked */}
       <div className="space-y-2">
-        <Label htmlFor="email">Correo electrónico</Label>
-        <Input id="email" type="email" value={email} disabled />
+        <Label htmlFor="email">
+          Correo electrónico <span className="text-destructive">*</span>
+        </Label>
+        <Input
+          id="email"
+          type="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="tu@email.com"
+          disabled={pending}
+          autoComplete="email"
+        />
       </div>
 
-      {/* Full name */}
       <div className="space-y-2">
-        <Label htmlFor="full_name">Nombre completo <span className="text-destructive">*</span></Label>
+        <Label htmlFor="full_name">
+          Nombre completo <span className="text-destructive">*</span>
+        </Label>
         <Input
           id="full_name"
           required
@@ -115,9 +124,10 @@ export function AcceptInviteForm({ token, email, communityId: _communityId, role
         />
       </div>
 
-      {/* Phone */}
       <div className="space-y-2">
-        <Label htmlFor="phone">Teléfono <span className="text-muted-foreground text-xs">(opcional)</span></Label>
+        <Label htmlFor="phone">
+          Teléfono <span className="text-muted-foreground text-xs">(opcional)</span>
+        </Label>
         <Input
           id="phone"
           type="tel"
@@ -128,9 +138,28 @@ export function AcceptInviteForm({ token, email, communityId: _communityId, role
         />
       </div>
 
-      {/* Password */}
       <div className="space-y-2">
-        <Label htmlFor="password">Elige una contraseña <span className="text-destructive">*</span></Label>
+        <Label htmlFor="piso">
+          Piso <span className="text-destructive">*</span>
+        </Label>
+        <Input
+          id="piso"
+          required
+          value={piso}
+          onChange={(e) => setPiso(e.target.value.toUpperCase())}
+          placeholder="Ej: 1A, 5J, 14E"
+          disabled={pending}
+          maxLength={3}
+        />
+        <p className="text-xs text-muted-foreground">
+          Número de piso (1–14) seguido de letra (A–J; A–E para el piso 14).
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="password">
+          Elige una contraseña <span className="text-destructive">*</span>
+        </Label>
         <Input
           id="password"
           type="password"
@@ -143,9 +172,10 @@ export function AcceptInviteForm({ token, email, communityId: _communityId, role
         />
       </div>
 
-      {/* Confirm password */}
       <div className="space-y-2">
-        <Label htmlFor="confirm_password">Confirmar contraseña <span className="text-destructive">*</span></Label>
+        <Label htmlFor="confirm_password">
+          Confirmar contraseña <span className="text-destructive">*</span>
+        </Label>
         <Input
           id="confirm_password"
           type="password"
@@ -170,7 +200,7 @@ export function AcceptInviteForm({ token, email, communityId: _communityId, role
       )}
 
       <Button type="submit" className="w-full" disabled={pending}>
-        {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Aceptar invitación'}
+        {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Unirse a la comunidad'}
       </Button>
     </form>
   );

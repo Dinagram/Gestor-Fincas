@@ -1,5 +1,3 @@
-import Link from 'next/link';
-
 import { LoginForm } from './_components/login-form';
 
 type SearchParams = Promise<{ redirect?: string; error?: string }>;
@@ -17,12 +15,6 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
 
       <LoginForm redirectTo={params.redirect ?? '/'} initialError={params.error} />
 
-      <p className="text-center text-sm text-muted-foreground">
-        ¿No tienes cuenta?{' '}
-        <Link href="/signup" className="font-medium text-primary hover:underline">
-          Solicita acceso
-        </Link>
-      </p>
     </div>
   );
 }

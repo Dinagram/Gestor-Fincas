@@ -350,6 +350,8 @@ export type Database = {
           invited_at: string | null
           invited_by: string | null
           joined_at: string | null
+          monthly_fee: number
+          payment_status: string
           profile_id: string
           role: Database["public"]["Enums"]["member_role"]
           status: Database["public"]["Enums"]["member_status"]
@@ -361,6 +363,8 @@ export type Database = {
           invited_at?: string | null
           invited_by?: string | null
           joined_at?: string | null
+          monthly_fee?: number
+          payment_status?: string
           profile_id: string
           role: Database["public"]["Enums"]["member_role"]
           status?: Database["public"]["Enums"]["member_status"]
@@ -372,6 +376,8 @@ export type Database = {
           invited_at?: string | null
           invited_by?: string | null
           joined_at?: string | null
+          monthly_fee?: number
+          payment_status?: string
           profile_id?: string
           role?: Database["public"]["Enums"]["member_role"]
           status?: Database["public"]["Enums"]["member_status"]
@@ -464,6 +470,7 @@ export type Database = {
       }
       invitations: {
         Row: {
+          cancelled_at: string | null
           community_id: string
           created_at: string
           email: string
@@ -476,6 +483,7 @@ export type Database = {
           used_at: string | null
         }
         Insert: {
+          cancelled_at?: string | null
           community_id: string
           created_at?: string
           email: string
@@ -488,6 +496,7 @@ export type Database = {
           used_at?: string | null
         }
         Update: {
+          cancelled_at?: string | null
           community_id?: string
           created_at?: string
           email?: string

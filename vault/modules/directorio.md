@@ -5,7 +5,8 @@ name: Módulo Directorio Vecinal
 path: src/app/(app)/c/[communityId]/directorio/
 description: >
   Vista del edificio y sus unidades. Muestra planta, puerta, propietario/inquilino,
-  estado de ocupación. Datos de contacto gated (solo junta/admin).
+  estado de ocupación, cuota mensual y estado de pago. Datos de contacto gated (solo junta/admin).
+  Permite al administrador editar datos de cualquier vecino.
 
 parents:
   - id: sys_gestionfinca
@@ -25,82 +26,147 @@ relations:
   - target: file_lib_permissions
     type: uses
     weight: 0.7
+  - target: action_directory
+    type: uses
+    weight: 0.9
 
 tags:
   - directorio
   - vecinos
   - edificio
   - privacy
+  - morosos
 
 state: active
 
 db_tables: [community_members, units, profiles]
 
 views:
-  - members-table: Lista de miembros con filtros y búsqueda
+  - members-table: Lista de miembros con filtros, búsqueda, edición inline y exportación XLS
   - floor-plan: Vista por planta del edificio
 ---
 
 # Módulo Directorio Vecinal
 
-Proporciona una visión completa del edificio y sus residentes. Permite a los vecinos conocer a sus vecinos (nombre y rol) y a la junta/admin ver datos de contacto completos. Es un módulo de solo lectura — no hay mutaciones, todas las queries son GET.
+Proporciona una visión completa del edificio y sus residentes. Permite a los vecinos ver información básica, a la junta/admin ver datos de contacto completos, y al administrador editar cualquier vecino.
 
 ---
 
 ## Páginas
 
 ### `page.tsx` — Directorio principal
-Server Component. Carga todos los miembros activos de la comunidad con sus unidades. Renderiza el cliente `DirectoryView` pasándole los datos ya cargados.
+Server Component. Filtra únicamente `viviendas` (`.eq('type', 'vivienda')`), excluyendo garajes y trasteros.
 
 Queries paralelas:
-1. `community_members` con join a `profiles` (nombre, email, teléfono) y `units` (planta, puerta, tipo).
-2. `units` para el plano del edificio (todas las unidades, estén ocupadas o no).
+1. `community_members` → join a `profiles` (nombre, email, teléfono) + campos `joined_at`, `monthly_fee`, `payment_status`.
+2. `units` filtradas por `type = 'vivienda'` (ordenadas por planta y puerta).
+
+Permisos calculados en el servidor:
+- `canSeeContact = isAtLeast(role, 'junta')` — contacto y cuota visibles
+- `canEditMembers = canDo(role, 'community.edit')` — botón editar visible
+
+KPIs (grid 2×2 / 4 en desktop):
+- **Unidades** — total de viviendas (azul)
+- **Ocupadas** — viviendas con miembro activo (verde)
+- **Inquilinos** — miembros con rol `inquilino` (ámbar)
+- **Morosos** — miembros con `payment_status = 'moroso'` (rojo)
+
+---
+
+## Tipo `DirectoryEntry` (exportado)
+
+```typescript
+{
+  unitId, floor, door, unitType, coefficient,
+  memberId: string | null,
+  profileId: string | null,        // necesario para updateMember
+  memberRole, memberStatus,
+  fullName, email, phone, avatarUrl,
+  joinedAt: string | null,
+  monthlyFee: number,              // community_members.monthly_fee
+  paymentStatus: 'al_dia' | 'moroso' | 'pendiente',
+}
+```
 
 ---
 
 ## Componentes
 
 ### `DirectoryView` (client)
-Componente principal con dos vistas toggleables:
+Controla filtros, búsqueda, vista y dialogs de importación. Props: `entries`, `canSeeContact`, `canEditMembers`, `communityId`.
 
-**Vista tabla (`MembersTable`):**
-- Busqueda en tiempo real por nombre (filtra localmente el array — no hace nueva query).
-- Filtros por rol: Todos / Propietarios / Inquilinos / Junta y Admin.
-- Columnas: Avatar + nombre, Rol (pill), Unidad (planta-puerta), Datos de contacto.
-- **Datos de contacto gated:** El email y teléfono solo aparecen si el usuario tiene `canDo(role, 'member.manage')` (junta/admin). Los propietarios e inquilinos solo ven el nombre y rol de sus vecinos. Esto respeta el RGPD básico de privacidad entre vecinos.
+**Filtros:** Todos · Propietarios · Inquilinos · Vacías · **Morosos** (rojo cuando activo).
 
-**Vista plano (`FloorPlan`):**
-- Renderiza el edificio planta a planta (agrupa unidades por `floor`).
-- Cada unidad es una celda con: número de puerta, nombre del residente (si está ocupada), indicador de tipo (propietario/inquilino).
-- Color de celda: vacía (gris claro), propietario (azul suave), inquilino (verde suave).
-- En móvil: se muestra como acordeón por planta en lugar de grid.
+**Botón Exportar** (visible para todos): genera `directorio-vecinos.xlsx` con todas las columnas via librería `xlsx`.
 
-### `MembersTable`
-Tabla con `overflow-x-auto` para móvil. Incluye `AvatarGradient` (iniciales del nombre con color determinista basado en hash del nombre — sin avatar real). Las filas son clickables si el usuario tiene permiso de ver datos de contacto.
+**Botón Importar** (solo `canSeeContact`): Dialog con descarga de plantilla → subida de fichero → previsualización → confirmación → llama a `importMembers`.
+
+### `MembersTable` (client)
+Tabla con columnas:
+
+| Columna | Descripción | Visibilidad |
+|---------|-------------|-------------|
+| Unidad | `1ºA`, `2ºB`… | Siempre |
+| Vecino | Nombre + "Desde MMM yyyy" | Siempre |
+| Contacto | Email + teléfono apilados | Solo `canSeeContact` |
+| Tipo | Badge Propietario / Inquilino | Siempre |
+| Tags | Badge Junta / Administrador | Solo ≥ lg |
+| Cuota | `120 €/mes` | Solo `canSeeContact` ≥ lg |
+| Estado | Badge Al día / Moroso / Pendiente | Siempre |
+| ✏️ Editar | Icono lápiz | Solo `canEditMembers` |
+
+Al pulsar el lápiz en una fila → abre `EditMemberDialog`.
+
+### `EditMemberDialog` (client)
+Dialog modal para editar un vecino. Campos:
+- Nombre completo (actualiza `profiles.full_name`)
+- Teléfono (actualiza `profiles.phone`)
+- Tipo: Propietario / Inquilino / Junta (actualiza `community_members.role`)
+- Cuota €/mes (actualiza `community_members.monthly_fee`)
+- Estado de pago: Al día / Pendiente / Moroso (actualiza `community_members.payment_status`)
+
+Llama a `updateMember` server action. Toast de éxito/error con `sonner`.
 
 ### `FloorPlan`
-Grid CSS con columnas fijas para las puertas. Las unidades vacías (sin `community_member` activo) se muestran en gris con "Vacía". Útil para que el admin identifique unidades sin asignar.
+Grid CSS planta a planta. Unidades vacías en gris. Propietario en azul, inquilino en verde.
+
+---
+
+## Server Actions (`src/actions/directory.ts`)
+
+### `importMembers(communityId, rows)`
+Gateado por `canDo(role, 'announcement.create')`. Por cada fila: busca unidad por `(floor, door)`, busca perfil por email, hace upsert en `community_members`.
+
+### `updateMember(communityId, memberId, profileId, input)`
+Gateado por `canDo(role, 'community.edit')`. Actualiza en paralelo `profiles` (nombre, teléfono) y `community_members` (role, monthly_fee, payment_status).
+
+---
+
+## Base de datos
+
+Campos relevantes de `community_members` (migración 0009):
+```sql
+monthly_fee    numeric(8,2) NOT NULL DEFAULT 0
+payment_status text NOT NULL DEFAULT 'al_dia'
+  CHECK (payment_status IN ('al_dia', 'moroso', 'pendiente'))
+```
 
 ---
 
 ## Privacidad
 
-El módulo implementa privacidad por niveles:
-
 | Dato | Propietario/Inquilino | Junta/Admin |
 |------|----------------------|-------------|
-| Nombre | ✓ | ✓ |
-| Rol | ✓ | ✓ |
-| Unidad (planta/puerta) | ✓ | ✓ |
-| Email | ✗ | ✓ |
-| Teléfono | ✗ | ✓ |
-
-La restricción se aplica en el cliente (el dato SÍ llega del servidor pero no se renderiza). Para mayor seguridad, en producción debería también filtrarse en la query RLS.
+| Nombre, Rol, Unidad | ✓ | ✓ |
+| Email, Teléfono | ✗ | ✓ |
+| Cuota, Estado pago | ✗ | ✓ |
+| Botón editar | ✗ | Solo admin_finca |
 
 ---
 
 ## Conexiones
 
 **Sistema:** [[gestionfinca]] · [[supabase]] · [[rbac]]
+**Acciones:** [[action-directory]]
 **Librerías:** [[lib-permissions]]
 **Conceptos:** [[con-community-isolation]]

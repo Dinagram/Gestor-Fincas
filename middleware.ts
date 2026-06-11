@@ -5,11 +5,11 @@ import { updateSession } from '@/lib/supabase/middleware';
 const PUBLIC_PATHS = [
   '/',
   '/login',
-  '/signup',
   '/forgot-password',
   '/reset-password',
   '/callback',
   '/invite',
+  '/join',
 ];
 
 function isPublic(pathname: string) {
@@ -20,8 +20,8 @@ export async function middleware(request: NextRequest) {
   const { response, user } = await updateSession(request);
   const { pathname } = request.nextUrl;
 
-  // Logged-in users hitting /login or /signup → push them into the app.
-  if (user && (pathname === '/login' || pathname === '/signup')) {
+  // Logged-in users hitting /login → push them into the app.
+  if (user && pathname === '/login') {
     const url = request.nextUrl.clone();
     url.pathname = '/';
     return NextResponse.redirect(url);

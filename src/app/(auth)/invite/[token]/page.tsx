@@ -1,7 +1,8 @@
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { ROLE_LABEL } from '@/lib/constants';
 
 import { AcceptInviteForm } from './_components/accept-invite-form';
 
@@ -14,7 +15,7 @@ export default async function InvitePage({ params }: { params: Params }) {
   const { data: invitation } = await admin
     .from('invitations')
     .select(
-      'id, email, role, community_id, expires_at, used_at, communities(name, address, city)',
+      'id, email, role, community_id, unit_id, expires_at, used_at, cancelled_at, communities(name, address, city), units(floor, door)',
     )
     .eq('token', token)
     .maybeSingle();
@@ -35,6 +36,17 @@ export default async function InvitePage({ params }: { params: Params }) {
     );
   }
 
+  if (invitation.cancelled_at) {
+    return (
+      <div className="space-y-4 text-center">
+        <h1 className="text-2xl font-semibold">Esta invitación fue cancelada</h1>
+        <p className="text-sm text-muted-foreground">
+          Contacta con el administrador de tu comunidad para solicitar una nueva.
+        </p>
+      </div>
+    );
+  }
+
   if (new Date(invitation.expires_at) < new Date()) {
     return (
       <div className="space-y-4 text-center">
@@ -50,12 +62,23 @@ export default async function InvitePage({ params }: { params: Params }) {
     ? invitation.communities[0]
     : invitation.communities;
 
+  const unit = Array.isArray(invitation.units)
+    ? invitation.units[0]
+    : invitation.units;
+
+  const pisoLabel = unit ? `${unit.floor}º${unit.door}` : undefined;
+
+  const roleLabel = ROLE_LABEL[invitation.role] ?? invitation.role;
+
   return (
     <div className="space-y-6">
       <div className="space-y-2 text-center">
         <h1 className="text-2xl font-semibold tracking-tight">Únete a {community?.name}</h1>
         <p className="text-sm text-muted-foreground">
-          {community?.address} — {community?.city}
+          {community?.address}{community?.city ? ` — ${community.city}` : ''}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Serás registrado como <span className="font-medium text-foreground">{roleLabel}</span>
         </p>
       </div>
 
@@ -63,6 +86,8 @@ export default async function InvitePage({ params }: { params: Params }) {
         token={token}
         email={invitation.email}
         communityId={invitation.community_id}
+        role={invitation.role}
+        piso={pisoLabel}
       />
     </div>
   );

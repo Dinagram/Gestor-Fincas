@@ -1,7 +1,7 @@
 import { Banknote, Percent, TrendingDown, TrendingUp } from 'lucide-react';
 
 import { KpiCard } from '@/components/shared/kpi-card';
-import { requireMember } from '@/lib/auth/require-user';
+import { requireRole } from '@/lib/auth/require-user';
 import { isAtLeast } from '@/lib/permissions';
 import { createServerClient } from '@/lib/supabase/server';
 
@@ -48,7 +48,7 @@ export default async function PresupuestoPage({
 }) {
   const { communityId } = await params;
   const { year: yearParam } = await searchParams;
-  const { role } = await requireMember(communityId);
+  const { role } = await requireRole(communityId, ['junta', 'admin_finca']);
 
   const currentYear = new Date().getFullYear();
   const year = yearParam ? parseInt(yearParam, 10) : currentYear;

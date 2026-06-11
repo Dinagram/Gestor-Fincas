@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { ChevronUp, LogOut, Moon, Sun, User } from 'lucide-react';
@@ -22,10 +23,11 @@ interface Props {
   fullName: string | null;
   email: string;
   role: Role;
+  communityId: string;
   variant?: 'topbar' | 'sidebar';
 }
 
-export function UserMenu({ fullName, email, role, variant = 'topbar' }: Props) {
+export function UserMenu({ fullName, email, role, communityId, variant = 'topbar' }: Props) {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
 
@@ -71,9 +73,11 @@ export function UserMenu({ fullName, email, role, variant = 'topbar' }: Props) {
           <p className="text-xs text-muted-foreground">{email}</p>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          <User className="h-4 w-4" />
-          Perfil
+        <DropdownMenuItem asChild>
+          <Link href={`/c/${communityId}/perfil`} className="flex items-center gap-2">
+            <User className="h-4 w-4" />
+            Perfil
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
           {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}

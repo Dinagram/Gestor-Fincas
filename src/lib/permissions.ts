@@ -37,7 +37,7 @@ const POLICY: Record<Action, Role[]> = {
   'poll.vote_economic':   ['propietario', 'junta', 'admin_finca'],
   'booking.create':       ['inquilino', 'propietario', 'junta', 'admin_finca'],
   'booking.manage':       ['junta', 'admin_finca'],
-  'member.invite':        ['admin_finca'],
+  'member.invite':        ['admin_finca', 'superadmin'],
   'community.edit':       ['admin_finca'],
 };
 

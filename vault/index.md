@@ -45,6 +45,8 @@ modules:
     priority: 8
   - id: mod_auth
     priority: 9
+  - id: mod_ajustes
+    priority: 10
 
 # ─── NODOS CRÍTICOS ───
 critical_nodes:
@@ -98,7 +100,7 @@ Punto de entrada del grafo. Navega por `system/gestionfinca.md` para la visión 
 ## Conexiones
 
 **Sistema:** [[gestionfinca]] · [[supabase]] · [[nextjs]] · [[rbac]]
-**Módulos:** [[auth]] · [[dashboard]] · [[incidencias]] · [[comunicados]] · [[votaciones]] · [[reservas]] · [[directorio]] · [[presupuesto]] · [[documentos]]
+**Módulos:** [[auth]] · [[dashboard]] · [[incidencias]] · [[comunicados]] · [[votaciones]] · [[reservas]] · [[directorio]] · [[presupuesto]] · [[documentos]] · [[ajustes]]
 **Archivos clave:** [[lib-permissions]] · [[lib-get-user]] · [[types-database]]
 **Flujos:** [[flow-auth]] · [[flow-mutation]] · [[flow-booking-create]]
 **Conceptos:** [[con-rls]] · [[con-community-isolation]]

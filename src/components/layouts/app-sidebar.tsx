@@ -16,6 +16,7 @@ import {
   PiggyBank,
   Plus,
   Settings,
+  UserCheck,
   Users,
   Vote,
 } from 'lucide-react';
@@ -30,7 +31,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
-import type { Role } from '@/lib/permissions';
+import { isAtLeast, type Role } from '@/lib/permissions';
 
 interface Community {
   id: string;
@@ -78,8 +79,13 @@ export function AppSidebar({ communityId, community, options, user, counts }: Pr
     { label: 'Comunicados', href: `/c/${communityId}/comunicados`, icon: Megaphone, count: counts.unreadAnnouncements, tone: 'brand' },
     { label: 'Sala Multiusos', href: `/c/${communityId}/reservas`, icon: CalendarDays },
     { label: 'Directorio', href: `/c/${communityId}/directorio`, icon: Users },
-    { label: 'Presupuesto', href: `/c/${communityId}/presupuesto`, icon: PiggyBank },
+    ...(isAtLeast(user.role, 'junta')
+      ? [{ label: 'Presupuesto', href: `/c/${communityId}/presupuesto`, icon: PiggyBank } as NavItem]
+      : []),
     { label: 'Documentos', href: `/c/${communityId}/documentos`, icon: FolderOpen },
+    ...(isAtLeast(user.role, 'admin_finca')
+      ? [{ label: 'Usuarios', href: `/c/${communityId}/usuarios`, icon: UserCheck } as NavItem]
+      : []),
     { label: 'Configuración', href: `/c/${communityId}/ajustes`, icon: Settings },
   ];
 
@@ -198,6 +204,7 @@ export function AppSidebar({ communityId, community, options, user, counts }: Pr
           fullName={user.fullName}
           email={user.email}
           role={user.role}
+          communityId={communityId}
         />
       </div>
     </aside>

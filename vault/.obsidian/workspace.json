@@ -176,8 +176,9 @@
       "bases:Crear nueva base": false
     }
   },
-  "active": "594953fddccb26c7",
+  "active": "726c2b627ffed7a0",
   "lastOpenFiles": [
+    "modules/ajustes.md",
     "modules/auth.md.tmp.27596.5bfd79bf68d6",
     "modules/dashboard.md.tmp.27596.8189ded00307",
     "modules/comunicados.md",
@@ -194,7 +195,6 @@
     "decisions/dec-saas-pivot.md.tmp.27596.9ae8f32f6ea3",
     "flows/flow-booking-create.md.tmp.27596.57fbf8617f30",
     "flows/flow-mutation.md.tmp.27596.53202b2cd52d",
-    "files/action-polls.md.tmp.27596.33878e11d6be",
     "modules/reservas.md",
     "decisions/dec-never-type.md",
     "decisions/dec-refactoring.md",

@@ -25,5 +25,5 @@
     ".next/types/**/*.ts",
     "scripts/**/*.ts"
   ],
-  "exclude": ["node_modules", "mockup-legacy", ".next"]
+  "exclude": ["node_modules", "mockup-legacy", ".next", "vault", "public", "supabase", "scripts"]
 }
